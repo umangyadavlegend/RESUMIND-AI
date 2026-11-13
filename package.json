@@ -2,6 +2,7 @@
   "name": "resumind-ai",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://resumind-ai-gx7e.vercel.app/",
   "description": "RESUMIND-AI: Bias-Free Autonomous AI Resume Screening & Candidate Ranking Platform",
   "scripts": {
     "build": "npm --prefix frontend install && npm --prefix frontend run build",

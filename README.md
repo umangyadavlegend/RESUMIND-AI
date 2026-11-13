@@ -1,5 +1,12 @@
 # RESUMIND AI — Intelligent Resume Screening & Candidate Ranking
 
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Demo-brightgreen?style=for-the-badge&logo=vercel)](https://resumind-ai-gx7e.vercel.app/)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-RESUMIND--AI-181717?style=for-the-badge&logo=github)](https://github.com/umangyadavlegend/RESUMIND-AI)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React 18](https://img.shields.io/badge/React%2018-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+
+> 🚀 **Live Production Application:** [https://resumind-ai-gx7e.vercel.app/](https://resumind-ai-gx7e.vercel.app/)  
 > **"Find the right talent. Faster. Smarter."**  
 > A cinematic, production-quality AI recruitment platform engineered with a dark high-contrast design system, multi-format resume parsing (PDF & DOCX), 250+ normalized skills taxonomy, and an explainable 4-pillar candidate ranking engine.
 
@@ -163,14 +170,16 @@ python -m pytest tests/ -v
 
 ## 6. Production Deployment Guide
 
-### Frontend Deployment (Vercel / Netlify / Cloudflare Pages)
-1. Push your repository to GitHub.
-2. In the Vercel dashboard, create a new project and select your repository.
-3. Set the **Root Directory** to `frontend`.
-4. Configure Build Command: `npm run build`
-5. Configure Output Directory: `dist`
-6. Set Environment Variables:
-   - `VITE_API_BASE=https://your-backend-domain.com/api`
+### Frontend Live on Vercel
+- **Official Live URL**: [https://resumind-ai-gx7e.vercel.app/](https://resumind-ai-gx7e.vercel.app/)
+- **Continuous Integration**: Connected to GitHub repository `umangyadavlegend/RESUMIND-AI`. Every commit pushed to `main` automatically triggers a zero-downtime production deployment on Vercel.
+
+### Frontend Deployment Settings
+1. Root Directory: `./` (or `frontend`)
+2. Build Command: `npm run build`
+3. Output Directory: `dist` (or `frontend/dist`)
+4. Environment Variables:
+   - `VITE_API_BASE=https://your-backend-domain.com/api` (points to your hosted FastAPI backend)
 
 ### Backend Deployment (Render / Railway / Fly.io / AWS ECS)
 1. Create a new Web Service pointing to the `backend/` directory.
