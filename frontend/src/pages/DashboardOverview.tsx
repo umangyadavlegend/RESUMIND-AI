@@ -52,11 +52,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     fetchAnalytics();
   }, []);
 
-  const chartData = analytics?.score_distribution.map((item) => ({
+  const chartData = (analytics?.score_distribution || []).map((item) => ({
     name: item.range.split(' ')[0], // e.g. "90-100%"
     count: item.count,
     label: item.range,
-  })) || [];
+  }));
 
   const isEmptyPipeline = !loading && (analytics?.total_resumes === 0) && (analytics?.active_jobs === 0);
 
@@ -260,7 +260,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <span>No skills extracted yet. Upload resumes to discover skill frequencies.</span>
               </div>
             ) : (
-              analytics.top_skills_matched.slice(0, 6).map((item) => (
+              (analytics.top_skills_matched || []).slice(0, 6).map((item) => (
                 <div key={item.skill} className="space-y-1">
                   <div className="flex justify-between text-xs font-medium">
                     <span className="text-white">{item.skill}</span>
@@ -322,7 +322,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
-                {analytics.recent_activity.map((session) => (
+                {(analytics?.recent_activity || []).map((session) => (
                   <tr key={session.id} className="hover:bg-surface/50 transition-colors">
                     <td className="py-3 font-semibold text-white">{session.title}</td>
                     <td className="py-3 font-mono text-primary-secondary">{session.candidates_count} Resumes</td>

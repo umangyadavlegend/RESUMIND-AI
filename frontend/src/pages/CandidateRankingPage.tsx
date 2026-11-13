@@ -61,7 +61,7 @@ export const CandidateRankingPage: React.FC<CandidateRankingPageProps> = ({
 
   useEffect(() => {
     if (initialResults?.candidates && initialResults.candidates.length > 0) {
-      setCandidates(initialResults.candidates.map((item) => item.candidate));
+      setCandidates((initialResults?.candidates || []).map((item) => item.candidate));
       setLoading(false);
     } else {
       fetchCandidates();

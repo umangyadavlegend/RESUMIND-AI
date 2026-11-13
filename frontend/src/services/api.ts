@@ -19,14 +19,18 @@ const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 function isStaticInterception(res: Response): boolean {
   if (res.status === 405) return true;
   const contentType = res.headers.get('content-type') || '';
-  if (res.status === 404 && contentType.includes('text/html')) return true;
+  if (contentType.includes('text/html')) return true;
   return false;
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
+  const contentType = res.headers.get('content-type') || '';
+  if (res.status === 405 || contentType.includes('text/html')) {
+    throw new Error('Static host interception (405/HTML)');
+  }
+
   if (!res.ok) {
     if (res.status === 401) {
-      // Notify application of session invalidation/expiration
       window.dispatchEvent(new CustomEvent('resumind:unauthorized'));
     }
     let errorMsg = `Request failed (${res.status})`;
@@ -36,23 +40,25 @@ async function handleResponse<T>(res: Response): Promise<T> {
         errorMsg = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
       }
     } catch {
-      // ignore json parse error
+      // ignore
     }
     throw new Error(errorMsg);
   }
-  // HTTP 204 No Content has no body
+
   if (res.status === 204) {
     return {} as T;
   }
+
   const text = await res.text();
   if (!text || text.trim() === '') {
     return {} as T;
   }
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    return {} as T;
+
+  if (text.trim().startsWith('<!doctype') || text.trim().startsWith('<html') || text.trim().startsWith('<!DOCTYPE')) {
+    throw new Error('Static host interception (HTML)');
   }
+
+  return JSON.parse(text) as T;
 }
 
 export const api = {
@@ -75,12 +81,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.register(data);
       }
-      return handleResponse(res);
+      return await handleResponse(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.register(data);
-      }
-      throw err;
+      return clientEngine.register(data);
     }
   },
 
@@ -95,12 +98,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.verifyRegistrationOtp(data);
       }
-      return handleResponse(res);
+      return await handleResponse(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.verifyRegistrationOtp(data);
-      }
-      throw err;
+      return clientEngine.verifyRegistrationOtp(data);
     }
   },
 
@@ -115,12 +115,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.login(data);
       }
-      return handleResponse<LoginStep1Response>(res);
+      return await handleResponse<LoginStep1Response>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.login(data);
-      }
-      throw err;
+      return clientEngine.login(data);
     }
   },
 
@@ -135,12 +132,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.verifyLoginOtp(data);
       }
-      return handleResponse<AuthResponse>(res);
+      return await handleResponse<AuthResponse>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.verifyLoginOtp(data);
-      }
-      throw err;
+      return clientEngine.verifyLoginOtp(data);
     }
   },
 
@@ -155,12 +149,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.resendOtp(data);
       }
-      return handleResponse<GenericResponse>(res);
+      return await handleResponse<GenericResponse>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.resendOtp(data);
-      }
-      throw err;
+      return clientEngine.resendOtp(data);
     }
   },
 
@@ -175,12 +166,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.forgotPassword(data);
       }
-      return handleResponse<GenericResponse>(res);
+      return await handleResponse<GenericResponse>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.forgotPassword(data);
-      }
-      throw err;
+      return clientEngine.forgotPassword(data);
     }
   },
 
@@ -195,12 +183,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.verifyResetOtp(data);
       }
-      return handleResponse<GenericResponse>(res);
+      return await handleResponse<GenericResponse>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.verifyResetOtp(data);
-      }
-      throw err;
+      return clientEngine.verifyResetOtp(data);
     }
   },
 
@@ -220,12 +205,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.resetPassword(data);
       }
-      return handleResponse<GenericResponse>(res);
+      return await handleResponse<GenericResponse>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.resetPassword(data);
-      }
-      throw err;
+      return clientEngine.resetPassword(data);
     }
   },
 
@@ -238,12 +220,9 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.getMe();
       }
-      return handleResponse<User>(res);
+      return await handleResponse<User>(res);
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError') || err.message?.includes('405')) {
-        return clientEngine.getMe();
-      }
-      throw err;
+      return clientEngine.getMe();
     }
   },
 
@@ -254,7 +233,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.getDevMailbox(email);
       }
-      return handleResponse(res);
+      return await handleResponse(res);
     } catch (err: any) {
       return clientEngine.getDevMailbox(email);
     }
@@ -269,7 +248,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.logout();
       }
-      return handleResponse<{ status: string; message: string }>(res);
+      return await handleResponse<{ status: string; message: string }>(res);
     } catch (err: any) {
       return clientEngine.logout();
     }
@@ -282,7 +261,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.listJobs();
       }
-      return handleResponse<JobDescription[]>(res);
+      return await handleResponse<JobDescription[]>(res);
     } catch (err: any) {
       return clientEngine.listJobs();
     }
@@ -299,7 +278,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.createJob(data);
       }
-      return handleResponse<JobDescription>(res);
+      return await handleResponse<JobDescription>(res);
     } catch (err: any) {
       return clientEngine.createJob(data);
     }
@@ -314,7 +293,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.deleteJob(jobId);
       }
-      return handleResponse<{ message: string }>(res);
+      return await handleResponse<{ message: string }>(res);
     } catch (err: any) {
       return clientEngine.deleteJob(jobId);
     }
@@ -331,7 +310,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.updateJob(jobId, data);
       }
-      return handleResponse<JobDescription>(res);
+      return await handleResponse<JobDescription>(res);
     } catch (err: any) {
       return clientEngine.updateJob(jobId, data);
     }
@@ -344,7 +323,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.listResumes();
       }
-      return handleResponse<ResumeItem[]>(res);
+      return await handleResponse<ResumeItem[]>(res);
     } catch (err: any) {
       return clientEngine.listResumes();
     }
@@ -362,7 +341,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.uploadResumes(files);
       }
-      return handleResponse<ResumeItem[]>(res);
+      return await handleResponse<ResumeItem[]>(res);
     } catch (err: any) {
       return clientEngine.uploadResumes(files);
     }
@@ -377,7 +356,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.deleteResume(resumeId);
       }
-      return handleResponse<{ message: string }>(res);
+      return await handleResponse<{ message: string }>(res);
     } catch (err: any) {
       return clientEngine.deleteResume(resumeId);
     }
@@ -404,7 +383,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.analyzeScreening(data);
       }
-      return handleResponse<ScreeningResults>(res);
+      return await handleResponse<ScreeningResults>(res);
     } catch (err: any) {
       return clientEngine.analyzeScreening(data);
     }
@@ -421,7 +400,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.startScreening(data);
       }
-      return handleResponse<ScreeningResults>(res);
+      return await handleResponse<ScreeningResults>(res);
     } catch (err: any) {
       return clientEngine.startScreening(data);
     }
@@ -434,7 +413,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.getLatestScreening(jobId);
       }
-      return handleResponse<ScreeningResults>(res);
+      return await handleResponse<ScreeningResults>(res);
     } catch (err: any) {
       return clientEngine.getLatestScreening(jobId);
     }
@@ -449,7 +428,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.deleteScreening(sessionId);
       }
-      return handleResponse<{ message: string }>(res);
+      return await handleResponse<{ message: string }>(res);
     } catch (err: any) {
       return clientEngine.deleteScreening(sessionId);
     }
@@ -469,7 +448,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.listCandidates(params);
       }
-      return handleResponse<Candidate[]>(res);
+      return await handleResponse<Candidate[]>(res);
     } catch (err: any) {
       return clientEngine.listCandidates(params);
     }
@@ -483,7 +462,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.getCandidateDetail(candidateId);
       }
-      return handleResponse<CandidateDetail>(res);
+      return await handleResponse<CandidateDetail>(res);
     } catch (err: any) {
       return clientEngine.getCandidateDetail(candidateId);
     }
@@ -504,7 +483,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.updateCandidateStatus(candidateId, newStatus);
       }
-      return handleResponse<Candidate>(res);
+      return await handleResponse<Candidate>(res);
     } catch (err: any) {
       return clientEngine.updateCandidateStatus(candidateId, newStatus);
     }
@@ -519,7 +498,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.deleteCandidate(candidateId);
       }
-      return handleResponse<{ message: string }>(res);
+      return await handleResponse<{ message: string }>(res);
     } catch (err: any) {
       return clientEngine.deleteCandidate(candidateId);
     }
@@ -531,7 +510,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/reports/${sessionId}/pdf`, {
         credentials: 'include',
       });
-      if (res.ok) return res.blob();
+      if (res.ok && !isStaticInterception(res)) return res.blob();
     } catch {}
     return new Blob(['RESUMIND AI Candidate Report'], { type: 'application/pdf' });
   },
@@ -545,7 +524,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/reports/${sessionId}/csv`, {
         credentials: 'include',
       });
-      if (res.ok) return res.blob();
+      if (res.ok && !isStaticInterception(res)) return res.blob();
     } catch {}
     const csvContent = 'Rank,Candidate Name,Email,Score,Status,Matched Skills\n1,UMANG SINGH,umang@example.com,88%,Shortlisted,"SQL, Python, Excel"';
     return new Blob([csvContent], { type: 'text/csv' });
@@ -564,7 +543,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.getAnalytics();
       }
-      return handleResponse<AnalyticsOverview>(res);
+      return await handleResponse<AnalyticsOverview>(res);
     } catch (err: any) {
       return clientEngine.getAnalytics();
     }
@@ -579,7 +558,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.getSystemStatus();
       }
-      return handleResponse<SystemStatus>(res);
+      return await handleResponse<SystemStatus>(res);
     } catch (err: any) {
       return clientEngine.getSystemStatus();
     }
@@ -594,7 +573,7 @@ export const api = {
       if (isStaticInterception(res)) {
         return clientEngine.cleanupResumes();
       }
-      return handleResponse<{ message: string }>(res);
+      return await handleResponse<{ message: string }>(res);
     } catch (err: any) {
       return clientEngine.cleanupResumes();
     }

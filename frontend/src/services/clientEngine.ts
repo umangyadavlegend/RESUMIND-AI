@@ -335,6 +335,12 @@ class ClientEngine {
 
   async getMe(): Promise<User> {
     if (!this.currentUser) {
+      try {
+        const stored = localStorage.getItem('resumind_current_user');
+        if (stored) this.currentUser = JSON.parse(stored);
+      } catch {}
+    }
+    if (!this.currentUser) {
       throw new Error('Request failed (401)');
     }
     return this.currentUser;

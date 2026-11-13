@@ -41,7 +41,7 @@ export const AnalyticsPage: React.FC = () => {
     );
   }
 
-  const scoreChartData = data.score_distribution.map((d) => ({
+  const scoreChartData = (data?.score_distribution || []).map((d) => ({
     name: d.range.split(' ')[0],
     count: d.count,
     label: d.range,
