@@ -19,9 +19,10 @@ class Settings(BaseSettings):
         os.getenv("VERCEL")
         or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
         or os.getenv("VERCEL_ENV")
+        or os.path.isdir("/tmp")
     )
-    _default_db: str = "/tmp/resumind.db" if bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../resumind.db"))
-    _default_uploads: str = "/tmp/uploads" if bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../uploads"))
+    _default_db: str = "/tmp/resumind.db" if (os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV") or os.path.isdir("/tmp")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../resumind.db"))
+    _default_uploads: str = "/tmp/uploads" if (os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV") or os.path.isdir("/tmp")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../uploads"))
 
     DB_PATH: str = _default_db
     DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{_default_db}")

@@ -1,18 +1,12 @@
 import os
 import sys
 
-# Compute directory paths
+# Ensure api directory is at the head of sys.path so 'app' package resolves cleanly
 current_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = os.path.abspath(os.path.join(current_dir, ".."))
-backend_dir = os.path.join(root_dir, "backend")
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-# Ensure backend directory is in sys.path so 'app' and its modules resolve
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
-
-# Import the FastAPI ASGI application
+# Import the FastAPI ASGI application from app.main
 from app.main import app
 
 # Expose app for Vercel Serverless Python runtime
