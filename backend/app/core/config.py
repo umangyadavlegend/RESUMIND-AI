@@ -15,11 +15,19 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
     # Database (Default to SQLite, compatible with PostgreSQL)
-    DB_PATH: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../resumind.db"))
-    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), '../../resumind.db'))}")
+    is_serverless: bool = bool(
+        os.getenv("VERCEL")
+        or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+        or os.getenv("VERCEL_ENV")
+    )
+    _default_db: str = "/tmp/resumind.db" if bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../resumind.db"))
+    _default_uploads: str = "/tmp/uploads" if bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or os.getenv("VERCEL_ENV")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "../../uploads"))
+
+    DB_PATH: str = _default_db
+    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{_default_db}")
     
     # Upload storage
-    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", os.path.abspath(os.path.join(os.path.dirname(__file__), "../../uploads")))
+    UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", _default_uploads)
     MAX_FILE_SIZE_MB: int = 15  # 15 MB limit per resume
     ALLOWED_EXTENSIONS: List[str] = [".pdf", ".docx"]
     
@@ -56,4 +64,7 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Ensure uploads directory exists
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+try:
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+except Exception:
+    pass

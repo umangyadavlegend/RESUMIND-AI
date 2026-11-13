@@ -89,8 +89,12 @@ async def upload_resumes(
         # Store to disk with sanitized unique name
         stored_name = f"{uuid.uuid4().hex}_{filename}"
         disk_path = os.path.join(settings.UPLOAD_DIR, stored_name)
-        with open(disk_path, "wb") as f:
-            f.write(content)
+        try:
+            os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+            with open(disk_path, "wb") as f:
+                f.write(content)
+        except Exception:
+            disk_path = ""
 
         resume = Resume(
             user_id=current_user.id,

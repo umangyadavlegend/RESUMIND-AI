@@ -9,8 +9,11 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app.api import auth, jobs, resumes, screening, candidates, reports, analytics, settings as settings_api
 
-# Initialize database schema
-Base.metadata.create_all(bind=engine)
+# Initialize database schema safely
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as schema_err:
+    pass
 
 # Auto-migrate SQLite columns if table already exists
 if settings.DATABASE_URL.startswith("sqlite"):
@@ -78,6 +81,7 @@ app.include_router(reports.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
 app.include_router(settings_api.router, prefix=settings.API_V1_STR)
 
+@app.get("/api", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """Health check endpoint for container probes and monitoring."""
