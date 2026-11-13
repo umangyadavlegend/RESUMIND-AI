@@ -1,0 +1,10 @@
+{
+  "name": "resumind-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RESUMIND-AI: Bias-Free Autonomous AI Resume Screening & Candidate Ranking Platform",
+  "scripts": {
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "start": "npm --prefix frontend run preview"
+  }
+}
